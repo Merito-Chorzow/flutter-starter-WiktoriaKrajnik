@@ -15,8 +15,8 @@ class _MapPage extends State<MapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('Map'),
-        actions: []
       ),
     );
   }

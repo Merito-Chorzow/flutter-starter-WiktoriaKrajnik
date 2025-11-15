@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'add.dart';
 import 'map.dart';
 import 'details.dart';
+import '/models/geo_note.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,13 +15,62 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
+  late Future<List<GeoNotes>> _notes;
+  final List<GeoNotes> _internalNotes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+  }
+
+  void _reload() {
+    _notes = Future.value(_internalNotes);
+    setState(() {});
+  }
   
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('Geo Journal – List'),
         actions: []
+      ),
+      body: FutureBuilder<List<GeoNotes>>(
+        future: _notes,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text("Error: ${snapshot.error}"));
+          }
+          final notes = snapshot.data ?? [];
+          if (notes.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("No geo notes added yet."),
+                  const SizedBox(height: 12),
+                  ElevatedButton(onPressed: _openAdd, child: const Text("Add your first note")),
+                ],
+              ),
+            );
+        }
+          return ListView.separated(
+            itemCount: notes.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final note = notes[index];
+              return ListTile(
+                title: Text(note.title),
+                subtitle: Text(note.dateCreated.toLocal().toString()),
+              );
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openMenu(context),
@@ -83,8 +133,22 @@ class _HomePageState extends State<HomePage> {
   
     Future<void> _openAdd() async {
     final result = await Navigator.pushNamed(context, AddGeoNotePage.routeName);
-    if(result == true){
-    }
+    if(!mounted) return;
+    if (result is! Map<String, dynamic>) return;
+
+    final newNote = GeoNotes(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: result['title'] as String,
+      description: result['description'] as String,
+      latitude: (result['lat'] as num).toDouble(),
+      longitude: (result['lng'] as num).toDouble(),
+      dateCreated: DateTime.parse(result['date'] as String),
+    );
+
+    setState(() {
+      _internalNotes.add(newNote);
+      _reload();
+    });
   }
     Future<void> _openDetails() async {
     final result = await Navigator.pushNamed(context, DetailsPage.routeName);
