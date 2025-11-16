@@ -33,6 +33,12 @@ class ApiService {
     return response;
   }
 
+  Future<List<GeoNotes>> getGeoNotes() async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    return List<GeoNotes>.from(_store);
+
+  }
+
     void clear() {
     _store.clear();
   }
