@@ -3,6 +3,7 @@ import 'add.dart';
 import 'map.dart';
 import 'details.dart';
 import '/models/geo_note.dart';
+import '/services/api.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,7 +17,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   late Future<List<GeoNotes>> _notes;
-  final List<GeoNotes> _internalNotes = [];
 
   @override
   void initState() {
@@ -25,8 +25,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _reload() {
-    _notes = Future.value(_internalNotes);
-    setState(() {});
+    _notes = ApiService.instance.getGeoNotes();
   }
   
   @override
@@ -87,9 +86,9 @@ class _HomePageState extends State<HomePage> {
       ),
       builder:(context){
         return SizedBox(
-          height: 200,
+          height: 300,
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               const SizedBox(height: 8),
               Center(
@@ -132,32 +131,18 @@ class _HomePageState extends State<HomePage> {
   }
   
     Future<void> _openAdd() async {
-    final result = await Navigator.pushNamed(context, AddGeoNotePage.routeName);
+    await Navigator.pushNamed(context, AddGeoNotePage.routeName);
     if(!mounted) return;
-    if (result is! Map<String, dynamic>) return;
-
-    final newNote = GeoNotes(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: result['title'] as String,
-      description: result['description'] as String,
-      latitude: (result['lat'] as num).toDouble(),
-      longitude: (result['lng'] as num).toDouble(),
-      dateCreated: DateTime.parse(result['date'] as String),
-    );
-
-    setState(() {
-      _internalNotes.add(newNote);
-      _reload();
-    });
+    setState(_reload);
   }
     Future<void> _openDetails() async {
-    final result = await Navigator.pushNamed(context, DetailsPage.routeName);
-    if(result == true){
-    }
+    await Navigator.pushNamed(context, DetailsPage.routeName);
+    if(!mounted) return;
+    setState(_reload);
   }
     Future<void> _openMap() async {
-    final result = await Navigator.pushNamed(context, MapPage.routeName);
-    if(result == true){
-    }
+    await Navigator.pushNamed(context, MapPage.routeName);
+    if(!mounted) return;
+    setState(_reload);
   }
 }

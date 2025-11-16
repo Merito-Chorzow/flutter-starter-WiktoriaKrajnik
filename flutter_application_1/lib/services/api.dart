@@ -39,6 +39,11 @@ class ApiService {
 
   }
 
+  Future<void> deleteGeoNote(String id) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+    _store.removeWhere((note) => note.id == id);
+  }
+
     void clear() {
     _store.clear();
   }

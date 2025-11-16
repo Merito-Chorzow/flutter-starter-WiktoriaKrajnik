@@ -38,7 +38,7 @@ class _MapPage extends State<MapPage> {
       body: FutureBuilder<List<GeoNotes>>(
         future: _notes,
         builder: (context, snapshot) {
-          LatLng center = const LatLng(51.5, -0.09);
+          LatLng center = const LatLng(50, 19);
           List<Marker> markers = [];
 
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -57,12 +57,29 @@ class _MapPage extends State<MapPage> {
                     height: 60,
                     child: GestureDetector(
                       child: const Icon(Icons.location_pin, size: 48, color: Colors.red),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(note.title),
+                            content: Text(
+                              "Title: ${note.title}\n"
+                              "Location: ${note.latitude.toStringAsFixed(4)}, ${note.longitude.toStringAsFixed(4)}",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text("Close"),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                 )
                 .toList();
           }
-
           return Stack(
             children: [
               FlutterMap(
@@ -72,10 +89,10 @@ class _MapPage extends State<MapPage> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate:
-                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    subdomains: const ['a', 'b', 'c'],
+                    urlTemplate: "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    userAgentPackageName: "com.example.flutter_application_1",
                   ),
+
                   if (markers.isNotEmpty) MarkerLayer(markers: markers),
                 ],
               ),
