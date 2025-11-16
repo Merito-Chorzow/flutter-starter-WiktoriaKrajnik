@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import '/services/api.dart';
 
 class AddGeoNotePage extends StatefulWidget {
   const AddGeoNotePage({super.key});
@@ -51,33 +52,59 @@ class _AddGeoNotePage extends State<AddGeoNotePage> {
   }
 }
 
-  Future<void> _submit() async {
-    final title = _titleCtrl.text.trim();
-    final desc = _descCtrl.text.trim();
-    if (title.isEmpty || desc.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Title and Description cannot be empty")));
-      return;
-    }
-    double? lat = _lat;
-    double? lng = _lng;
-    if ((lat == null || lng == null) && _latCtrl.text.isNotEmpty && _lngCtrl.text.isNotEmpty) {
-      lat = double.tryParse(_latCtrl.text);
-      lng = double.tryParse(_lngCtrl.text);
-    }
-    if (lat == null || lng == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Get location or enter valid lat and lng")));
-      return;
-    }
-    final newGeoNote = {
+Future<void> _submit() async {
+  final title = _titleCtrl.text.trim();
+  final desc = _descCtrl.text.trim();
+
+  if (title.isEmpty || desc.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Title and Description cannot be empty")));
+    return;
+  }
+
+  double? lat = _lat;
+  double? lng = _lng;
+
+  if ((lat == null || lng == null) && _latCtrl.text.isNotEmpty && _lngCtrl.text.isNotEmpty) {
+    lat = double.tryParse(_latCtrl.text);
+    lng = double.tryParse(_lngCtrl.text);
+  }
+
+  if (lat == null || lng == null) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Get location or enter valid lat and lng")));
+    return;
+  }
+
+  final newGeoNote = {
     "title": title,
     "description": desc,
     "lat": lat,
     "lng": lng,
     "date": DateTime.now().toIso8601String(),
-    };
-    Navigator.pop(context, newGeoNote);
+  };
+
+  setState(() => _loading = true);
+
+  try {
+    final response = await ApiService.instance.postGeoNote(title, desc, lat, lng);
+
+    if (!mounted) return;
+
+    if(response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Geo note added successfully.')),);
+      Navigator.pop(context, newGeoNote);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add geo note: ${response.statusCode}')),);
+    }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error while adding geo note: $e'),),);
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

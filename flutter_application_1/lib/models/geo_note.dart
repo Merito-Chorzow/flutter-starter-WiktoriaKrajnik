@@ -14,4 +14,15 @@ class GeoNotes{
     required this.longitude,
     required this.dateCreated,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'latitude': latitude,
+      'longitude': longitude,
+      'dateCreated': dateCreated.toIso8601String(),
+    };
+  }
 }
